@@ -44,7 +44,20 @@ class Monitor():
         """
         while not self.kernel_client.loop.is_closed():
             msg = await self.kernel_client.get_next_msg(channel)
-            self.line_queue.put(f'[{channel}] {msg["header"]["msg_type"]}: {msg["content"]}')
+            if channel == "iopub":
+                if msg["header"]["msg_type"] == "execute_input":
+                    self.line_queue.put('>>> '+msg['content']['code'])
+                elif msg["header"]["msg_type"] == "execute_result":
+                    self.line_queue.put(msg['content']['data']['text/plain'])
+                elif msg["header"]["msg_type"] == "stream":
+                    if msg["content"]['name'] == 'stdout':
+                        self.line_queue.put(msg['content']['text'])
+                else:
+                    pass
+                    # self.line_queue.put(f'[{channel}] {msg["header"]["msg_type"]}: {msg["content"]}')
+            else:
+                pass
+                # self.line_queue.put(f'[{channel}] {msg["header"]["msg_type"]}: {msg["content"]}')
 
     def timer_write_msgs(self):
         """Write kernel <-> vim messages to monitor buffer"""
