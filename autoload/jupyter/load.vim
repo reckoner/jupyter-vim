@@ -80,4 +80,3 @@ endfunction
 function! s:opfunc_run_code(type) abort
     call s:get_opfunc(function('jupyter#SendCode'))(a:type)
 endfunction
-"
