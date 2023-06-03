@@ -30,7 +30,6 @@ Install:
     Python.
 """
 
-
 try:
     # pylint: disable=unused-import
     import jupyter   # noqa
@@ -51,12 +50,30 @@ from os.path import splitext
 from platform import system
 import signal
 import re
+import tempfile
 
 # Local
 from jupyter_util import str_to_py, echom, is_integer, unquote_string, get_vim
 from jupyter_messenger import JupyterMessenger
 from monitor_console import Monitor
 
+def GetClipboardText():
+    from ctypes import windll, c_char_p
+    from win32con import CF_TEXT
+    OpenClipboard = windll.user32.OpenClipboard
+    GetClipboardData = windll.user32.GetClipboardData
+    CloseClipboard = windll.user32.CloseClipboard
+    GlobalLock = windll.kernel32.GlobalLock
+    GlobalUnlock = windll.kernel32.GlobalUnlock
+    OpenClipboard = windll.user32.OpenClipboard    
+    text = ""
+    if OpenClipboard(None):
+        hClipMem = GetClipboardData(CF_TEXT)
+        GlobalLock.restype = c_char_p
+        text = GlobalLock((hClipMem))
+        GlobalUnlock((hClipMem))
+        CloseClipboard()
+    return text
 
 class JupyterVimSession():
     """Object containing jupyter <-> vim session info.
@@ -99,6 +116,11 @@ class JupyterVimSession():
             Specific kernel connection filename, i.e.
                 ``$(jupyter --runtime)/kernel-123.json``
         """
+        if '*' in filename:
+            tmp = tempfile.NamedTemporaryFile(suffix='.json', delete=False)
+            tmp.file.write(GetClipboardText())
+            filename = tmp.name
+            
         if self.kernel_client.check_connection():
             echom('Already connected to a kernel. Use :JupyterDisconnect to disconnect.', style='Error')
             return
@@ -272,6 +294,17 @@ class JupyterVimSession():
             run_cmd=run_cmd, params=params, filename=filename)
         msg_id = self.kernel_client.execute(cmd, allow_stdin=False)
         return (cmd, msg_id)
+
+    @if_connected
+    def send_clipboard(self):
+        """Send clipboard to the kernel.
+
+        .. note:: vim command `:JupyterSendRange`.
+        """
+        lines = GetClipboardText().decode('utf8')
+        msg_id = self.kernel_client.execute(lines, allow_stdin=False)
+        prompt = "range {:d}-{:d} ".format(1, len(lines.splitlines()))
+        return (prompt, msg_id)
 
     @if_connected
     def send_range(self):

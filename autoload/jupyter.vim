@@ -123,6 +123,10 @@ function! jupyter#SendCell() abort
     python3 _jupyter_session.run_cell()
 endfunction
 
+function! jupyter#SendClipboard() abort
+    python3 _jupyter_session.send_clipboard()
+endfunction
+
 function! jupyter#SendCode(code) abort
     " NOTE: 'run_command' gives more checks than just raw 'send'
     python3 _jupyter_session.run_command(vim.eval('a:code'))

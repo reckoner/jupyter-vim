@@ -8,6 +8,7 @@ function! jupyter#load#MakeStandardCommands() abort
     command! -buffer -count      JupyterSendCount       call jupyter#SendCount(<count>)
     command! -buffer -range -bar JupyterSendRange       <line1>,<line2>call jupyter#SendRange()
     command! -buffer -nargs=0    JupyterSendCell        call jupyter#SendCell()
+    command! -buffer -nargs=0    JupyterSendClipboard        call jupyter#SendClipboard()
     command! -buffer -nargs=0    JupyterStartMonitor   call jupyter#StartMonitor()
     command! -buffer -nargs=0    JupyterStopMonitor   call jupyter#StopMonitor()
     command! -buffer -nargs=? -complete=dir  JupyterCd  call jupyter#JupyterCd(<f-args>)
@@ -27,7 +28,7 @@ function! jupyter#load#MapStandardKeys() abort
     nnoremap <buffer> <silent> <localleader>d    :JupyterCd %:p:h<CR>
 
     " Send just the current line
-    nnoremap <buffer> <silent> <localleader>X    :JupyterSendCell<CR>
+    nnoremap <buffer> <silent> <localleader>x    :JupyterSendClipboard<CR>
     nnoremap <buffer> <silent> <localleader>E    :JupyterSendRange<CR>
 
     " Send the text to jupyter kernel
